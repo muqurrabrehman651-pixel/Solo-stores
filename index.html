@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SOLE — Premium Store</title>
+
+<style>
+:root{
+  --bg:#0a0a0a;
+  --card:#141414;
+  --gold:#c8a96e;
+  --text:#fff;
+  --muted:#aaa;
+  --border:#222;
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  overflow-x:hidden;
+}
+
+/* ===== HEADER ===== */
+header{
+  position:fixed;
+  top:0;
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 25px;
+  background:rgba(10,10,10,0.75);
+  backdrop-filter: blur(12px);
+  border-bottom:1px solid var(--border);
+  z-index:1000;
+}
+
+.logo{
+  font-size:20px;
+  font-weight:bold;
+  color:var(--gold);
+  letter-spacing:2px;
+}
+
+button{
+  background:transparent;
+  border:1px solid var(--gold);
+  color:var(--gold);
+  padding:8px 12px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+button:hover{
+  background:var(--gold);
+  color:black;
+  transform:scale(1.05);
+}
+
+/* ===== HERO ===== */
+.hero{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:20px;
+  background: radial-gradient(circle at top, rgba(200,169,110,0.15), transparent 60%);
+}
+
+.hero h1{
+  font-size:70px;
+  letter-spacing:6px;
+  animation:fadeUp 1s ease;
+}
+
+.hero p{
+  margin-top:15px;
+  color:var(--muted);
+  animation:fadeUp 1.3s ease;
+}
+
+/* ===== PRODUCTS ===== */
+.container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:25px;
+  justify-content:center;
+  padding:60px 20px;
+}
+
+.card{
+  width:250px;
+  background:var(--card);
+  border:1px solid var(--border);
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(40px);
+  transition:0.6s ease;
+}
+
+.card.show{
+  opacity:1;
+  transform:translateY(0);
+}
+
+.card:hover{
+  transform:translateY(-10px) scale(1.05);
+  border-color:var(--gold);
+  box-shadow:0 15px 35px rgba(200,169,110,0.25);
+}
+
+.card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  transition:0.6s ease;
+}
+
+.card:hover img{
+  transform:scale(1.15) rotate(1deg);
+}
+
+.card-content{
+  padding:12px;
+}
+
+.price{
+  color:var(--gold);
+  font-weight:bold;
+  margin-top:5px;
+}
+
+.btn{
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  border:none;
+  cursor:pointer;
+  background:var(--gold);
+  font-weight:bold;
+  transition:0.3s;
+}
+
+.btn:hover{
+  transform:scale(1.03);
+}
+
+/* ===== CART ===== */
+#cartPanel{
+  position:fixed;
+  right:-380px;
+  top:0;
+  width:350px;
+  height:100vh;
+  background:#111;
+  border-left:1px solid var(--border);
+  padding:20px;
+  transition:0.5s ease;
+  z-index:2000;
+  overflow:auto;
+}
+
+#cartPanel.active{
+  right:0;
+}
+
+.cart-item{
+  padding:10px;
+  border-bottom:1px solid #333;
+  animation:slideIn 0.3s ease;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(30px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+@keyframes slideIn{
+  from{opacity:0;transform:translateX(20px);}
+  to{opacity:1;transform:translateX(0);}
+}
+
+/* smooth scroll */
+html{
+  scroll-behavior:smooth;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">SOLE</div>
+<div>
+<button onclick="toggleCart()">Cart (<span id="count">0</span>)</button>
+</div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+<h1>SOLE</h1>
+<p>Premium Nike-level footwear experience</p>
+</section>
+
+<!-- PRODUCTS -->
+<div class="container" id="products"></div>
+
+<!-- CART -->
+<div id="cartPanel">
+<h2 style="color:#c8a96e">Your Cart</h2>
+<div id="cartBox"></div>
+</div>
+
+<script>
+
+/* ===== DATA ===== */
+const products=[
+{id:1,name:"Apex Runner Pro",price:189,img:"https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600"},
+{id:2,name:"Urban Stealth",price:149,img:"https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?w=600"},
+{id:3,name:"Phantom Court",price:219,img:"https://images.unsplash.com/photo-1579338559194-a162d19bf842?w=600"},
+{id:4,name:"Terra Trail",price:165,img:"https://images.unsplash.com/photo-1510771463146-e89e6e86560e?w=600"},
+];
+
+let cart=[];
+
+/* ===== RENDER PRODUCTS ===== */
+function render(){
+let box=document.getElementById("products");
+
+products.forEach((p,i)=>{
+box.innerHTML+=`
+<div class="card">
+<img src="${p.img}">
+<div class="card-content">
+<h3>${p.name}</h3>
+<div class="price">$${p.price}</div>
+<button class="btn" onclick="add(${p.id})">Add to Cart</button>
+</div>
+</div>`;
+});
+
+/* smooth reveal animation */
+setTimeout(()=>{
+document.querySelectorAll(".card").forEach((c,i)=>{
+setTimeout(()=>c.classList.add("show"), i*120);
+});
+},200);
+}
+
+/* ===== CART ===== */
+function add(id){
+let p=products.find(x=>x.id===id);
+cart.push(p);
+document.getElementById("count").innerText=cart.length;
+renderCart();
+}
+
+function renderCart(){
+let box=document.getElementById("cartBox");
+box.innerHTML="";
+cart.forEach(c=>{
+box.innerHTML+=`
+<div class="cart-item">
+${c.name} - $${c.price}
+</div>`;
+});
+}
+
+/* ===== CART TOGGLE ===== */
+function toggleCart(){
+document.getElementById("cartPanel").classList.toggle("active");
+}
+
+/* INIT */
+render();
+
+</script>
+
+</body>
+</html>
